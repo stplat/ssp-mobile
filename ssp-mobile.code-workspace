@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"workbench.colorTheme": "Default Light+",
+		"workbench.tree.indent": 10,
+		"editor.minimap.enabled": false,
+		"editor.formatOnSave": true,
+		"editor.fontSize": 15,
+		"editor.lineHeight": 24,
+		"php.suggest.basic": true,
+	}
+}
