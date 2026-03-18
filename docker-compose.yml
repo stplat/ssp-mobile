@@ -1,0 +1,17 @@
+services:
+  ssp-mobile-dev:
+    image: ssp-mobile-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    network_mode: host
+    volumes:
+      - ./:/app
+      - ${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Android/Sdk}}:/opt/android-sdk
+    environment:
+      ANDROID_SDK_ROOT: /opt/android-sdk
+      ANDROID_HOME: /opt/android-sdk
+      PATH: /opt/android-sdk/platform-tools:/opt/android-sdk/emulator:/opt/android-sdk/cmdline-tools/latest/bin:${PATH}
+    tty: true
+    stdin_open: true

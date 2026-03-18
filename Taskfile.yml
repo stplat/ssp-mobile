@@ -1,0 +1,57 @@
+version: "3"
+
+vars:
+  SERVICE: ssp-mobile-dev
+
+tasks:
+  build:
+    desc: Build Docker image for development
+    cmds:
+      - docker compose build
+
+  up:
+    desc: Start dev container (detached)
+    cmds:
+      - docker compose up -d
+
+  down:
+    desc: Stop dev container
+    cmds:
+      - docker compose down
+
+  ps:
+    desc: Show container status
+    cmds:
+      - docker compose ps
+
+  logs:
+    desc: Tail container logs
+    cmds:
+      - docker compose logs -f {{.SERVICE}}
+
+  shell:
+    desc: Open shell in dev container
+    cmds:
+      - docker compose run --rm {{.SERVICE}} bash
+
+  init:
+    desc: Initialize React Native project in current directory
+    cmds:
+      - docker compose run --rm {{.SERVICE}} npx react-native@latest init SspMobile --directory .
+
+  sdk:bootstrap:
+    desc: Download Android command-line tools into mounted SDK volume
+    cmds:
+      - docker compose run --rm {{.SERVICE}} bash -lc 'mkdir -p /opt/android-sdk/cmdline-tools && curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-14742923_latest.zip -o /tmp/cmdline-tools.zip && unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-tools && mkdir -p /opt/android-sdk/cmdline-tools/latest && mv /tmp/cmdline-tools/cmdline-tools/* /opt/android-sdk/cmdline-tools/latest && rm -rf /tmp/cmdline-tools /tmp/cmdline-tools.zip'
+
+  sdk:install:
+    desc: Install latest Android SDK packages (API 36)
+    cmds:
+      - docker compose run --rm {{.SERVICE}} bash -lc 'sdkmanager --licenses'
+      - docker compose run --rm {{.SERVICE}} bash -lc 'sdkmanager --update'
+      - docker compose run --rm {{.SERVICE}} bash -lc 'sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "system-images;android-36;google_apis;x86_64" "emulator"'
+
+  android:
+    desc: Build and run Android app (device/emulator on host)
+    cmds:
+      - docker compose run --rm {{.SERVICE}} npx react-native run-android
