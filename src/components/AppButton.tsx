@@ -8,16 +8,33 @@ type Props = {
   onPress: () => void;
   variant?: "primary" | "secondary";
   style?: ViewStyle;
+  disabled?: boolean;
+  loading?: boolean;
 };
 
-export function AppButton({ title, onPress, variant = "primary", style }: Props) {
+export function AppButton({
+  title,
+  onPress,
+  variant = "primary",
+  style,
+  disabled = false,
+  loading = false
+}: Props) {
   const secondary = variant === "secondary";
   return (
     <Pressable
-      style={[styles.base, secondary ? styles.secondary : styles.primary, style]}
+      style={[
+        styles.base,
+        secondary ? styles.secondary : styles.primary,
+        (disabled || loading) && styles.disabled,
+        style
+      ]}
       onPress={onPress}
+      disabled={disabled || loading}
     >
-      <Text style={[styles.text, secondary ? styles.secondaryText : styles.primaryText]}>{title}</Text>
+      <Text style={[styles.text, secondary ? styles.secondaryText : styles.primaryText]}>
+        {loading ? "Загрузка..." : title}
+      </Text>
     </Pressable>
   );
 }
@@ -32,12 +49,12 @@ const styles = StyleSheet.create({
     borderWidth: 1
   },
   primary: {
-    borderColor: "#1f97d2",
-    backgroundColor: "#2AABEE"
+    borderColor: colors.orangeDark,
+    backgroundColor: colors.orange
   },
   secondary: {
-    borderColor: colors.line,
-    backgroundColor: colors.surface
+    borderColor: "#ebedf3",
+    backgroundColor: "#f2f4f8"
   },
   text: {
     fontSize: 15,
@@ -47,7 +64,10 @@ const styles = StyleSheet.create({
     color: "#fff"
   },
   secondaryText: {
-    color: colors.blueDark
+    color: colors.textPrimary
+  },
+  disabled: {
+    opacity: 0.55
   }
 });
 

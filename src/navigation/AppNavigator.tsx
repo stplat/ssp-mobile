@@ -3,10 +3,10 @@ import { Text } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import { useApp } from "../state/AppState";
 import { colors } from "../theme/colors";
 import type { MainTabParamList, RootStackParamList } from "./types";
 import { AuthScreen } from "../screens/AuthScreen";
+import { OtpScreen } from "../screens/OtpScreen";
 import { LeadsListScreen } from "../screens/LeadsListScreen";
 import { CategoriesScreen } from "../screens/CategoriesScreen";
 import { MyLeadsScreen } from "../screens/MyLeadsScreen";
@@ -51,8 +51,6 @@ function MainTabs() {
 }
 
 export function AppNavigator() {
-  const { state } = useApp();
-
   return (
     <Stack.Navigator
       screenOptions={{
@@ -60,26 +58,18 @@ export function AppNavigator() {
         headerShadowVisible: false
       }}
     >
-      {state.session.isAuthed ? (
-        <>
-          <Stack.Screen
-            name="MainTabs"
-            component={MainTabs}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen name="LeadDetails" component={LeadDetailsScreen} options={{ title: "Детали заявки" }} />
-          <Stack.Screen name="Paywall" component={PaywallScreen} options={{ title: "Тариф" }} />
-          <Stack.Screen
-            name="CategoryPayments"
-            component={CategoryPaymentsScreen}
-            options={{ title: "Оплата по категориям" }}
-          />
-          <Stack.Screen name="News" component={NewsScreen} options={{ title: "Новости" }} />
-          <Stack.Screen name="Feedback" component={FeedbackScreen} options={{ title: "Обратная связь" }} />
-        </>
-      ) : (
-        <Stack.Screen name="Auth" component={AuthScreen} options={{ title: "Вход" }} />
-      )}
+      <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="AuthEmail" component={AuthScreen} options={{ title: "Вход" }} />
+      <Stack.Screen name="AuthOtp" component={OtpScreen} options={{ title: "Подтверждение" }} />
+      <Stack.Screen name="LeadDetails" component={LeadDetailsScreen} options={{ title: "Детали заявки" }} />
+      <Stack.Screen name="Paywall" component={PaywallScreen} options={{ title: "Тариф" }} />
+      <Stack.Screen
+        name="CategoryPayments"
+        component={CategoryPaymentsScreen}
+        options={{ title: "Оплата по категориям" }}
+      />
+      <Stack.Screen name="News" component={NewsScreen} options={{ title: "Новости" }} />
+      <Stack.Screen name="Feedback" component={FeedbackScreen} options={{ title: "Обратная связь" }} />
     </Stack.Navigator>
   );
 }

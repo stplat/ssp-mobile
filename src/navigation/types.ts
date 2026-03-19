@@ -6,7 +6,8 @@ export type MainTabParamList = {
 };
 
 export type RootStackParamList = {
-  Auth: undefined;
+  AuthEmail: undefined;
+  AuthOtp: { email: string };
   MainTabs: undefined;
   LeadDetails: { id: string };
   Paywall: { returnToLeadId?: string } | undefined;

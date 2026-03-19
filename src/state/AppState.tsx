@@ -1,11 +1,15 @@
 import React, { createContext, useContext, useMemo, useReducer } from "react";
 
+import { sendCode, verifyCode } from "../api/auth";
+import { clearAccessToken, saveAccessToken } from "../api/tokenStorage";
 import type { Lead, WorkStatus } from "../types";
 import { seedLeads } from "../stub/seedLeads";
 
 type SessionState = {
   isAuthed: boolean;
-  phone?: string;
+  isGuest: boolean;
+  accessToken?: string;
+  email?: string;
 };
 
 export type AppState = {
@@ -31,7 +35,8 @@ export type AppState = {
 };
 
 type Action =
-  | { type: "AUTH_SUCCESS"; phone: string }
+  | { type: "AUTH_SUCCESS"; email: string; accessToken: string; username: string }
+  | { type: "START_GUEST" }
   | { type: "LOGOUT" }
   | { type: "REFRESH_START" }
   | { type: "REFRESH_DONE"; items: Lead[]; cursor?: string }
@@ -46,7 +51,7 @@ type Action =
 const categories = ["Манипулятор", "Автокран", "Эвакуатор", "Самосвал", "Экскаватор"];
 
 const initialState: AppState = {
-  session: { isAuthed: false },
+  session: { isAuthed: false, isGuest: false },
   me: { freeContactViewsLeft: 3, username: "stsp" },
   categories: { all: categories, selected: categories.slice(0, 3) },
   leads: {
@@ -68,7 +73,21 @@ function hasActiveSubscription(untilIso?: string) {
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case "AUTH_SUCCESS":
-      return { ...state, session: { isAuthed: true, phone: action.phone } };
+      return {
+        ...state,
+        session: {
+          isAuthed: true,
+          isGuest: false,
+          email: action.email,
+          accessToken: action.accessToken
+        },
+        me: { ...state.me, username: action.username }
+      };
+    case "START_GUEST":
+      return {
+        ...state,
+        session: { isAuthed: false, isGuest: true, email: undefined, accessToken: undefined }
+      };
     case "LOGOUT":
       return { ...initialState, leads: { ...initialState.leads, items: state.leads.items } };
     case "REFRESH_START":
@@ -148,8 +167,10 @@ function reducer(state: AppState, action: Action): AppState {
 }
 
 type AppActions = {
-  authStubVerifyOtp: (phone: string, otp: string) => Promise<void>;
-  logout: () => void;
+  sendEmailCode: (email: string) => Promise<void>;
+  verifyEmailCode: (email: string, code: string) => Promise<void>;
+  startGuestSession: () => void;
+  logout: () => Promise<void>;
   refreshLeadsStub: () => Promise<void>;
   loadMoreLeadsStub: () => Promise<void>;
   setSelectedCategories: (selected: string[]) => void;
@@ -168,11 +189,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const actions: AppActions = useMemo(() => {
     return {
-      authStubVerifyOtp: async (phone: string, otp: string) => {
-        if (!phone.trim() || !otp.trim()) return;
-        dispatch({ type: "AUTH_SUCCESS", phone });
+      sendEmailCode: async (email: string) => {
+        if (!email.trim()) {
+          throw new Error("EMPTY_EMAIL");
+        }
+        await sendCode({ email });
       },
-      logout: () => dispatch({ type: "LOGOUT" }),
+      verifyEmailCode: async (email: string, code: string) => {
+        if (!email.trim() || code.trim().length !== 6) {
+          throw new Error("INVALID_INPUT");
+        }
+        const res = await verifyCode({ email, code });
+        await saveAccessToken(res.accessToken);
+        dispatch({
+          type: "AUTH_SUCCESS",
+          email: res.user.email,
+          accessToken: res.accessToken,
+          username: res.user.username
+        });
+      },
+      startGuestSession: () => dispatch({ type: "START_GUEST" }),
+      logout: async () => {
+        await clearAccessToken();
+        dispatch({ type: "LOGOUT" });
+      },
       refreshLeadsStub: async () => {
         dispatch({ type: "REFRESH_START" });
         await new Promise<void>((resolve) => setTimeout(resolve, 350));
@@ -188,6 +228,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setSelectedCategories: (selected: string[]) => dispatch({ type: "SET_CATEGORIES", selected }),
       markRead: (id: string) => dispatch({ type: "MARK_READ", id }),
       canRevealContact: (leadId: string) => {
+        if (!state.session.isAuthed) return false;
         if (state.leads.revealedContactByLeadId[leadId]) return true;
         const subActive = hasActiveSubscription(state.me.subscriptionActiveUntil);
         return subActive || state.me.freeContactViewsLeft > 0;
@@ -203,6 +244,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    state.session.isAuthed,
     state.leads.isLoadingMore,
     state.leads.items.length,
     state.me.freeContactViewsLeft,

@@ -21,12 +21,27 @@ export function ProfileScreen() {
     return `Активна до ${formatDateTime(until)}`;
   }, [state.me.subscriptionActiveUntil]);
 
+  if (!state.session.isAuthed) {
+    return (
+      <View style={styles.root}>
+        <View style={styles.guestHero} />
+        <AppCard style={styles.guestCard}>
+          <Text style={styles.guestTitle}>Вы не авторизованы</Text>
+          <Text style={styles.guestText}>
+            Войдите в профиль, чтобы сохранить проекты, получать доступ к данным и использовать все возможности
+          </Text>
+        </AppCard>
+        <AppButton title="Войти в профиль" onPress={() => navigation.navigate("AuthEmail")} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.root}>
       <AppCard style={styles.card}>
         <Text style={styles.title}>Профиль</Text>
         <Text style={styles.line}>Username: {state.me.username}</Text>
-        <Text style={styles.line}>Телефон: {state.session.phone ?? "+7 (...) ..."}</Text>
+        <Text style={styles.line}>Email: {state.session.email ?? "—"}</Text>
       </AppCard>
 
       <AppCard style={styles.card}>
@@ -56,6 +71,15 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg, padding: spacing.md, gap: spacing.sm },
+  guestHero: {
+    marginTop: spacing.lg,
+    height: 240,
+    borderRadius: 24,
+    backgroundColor: "#edf0f6"
+  },
+  guestCard: { marginTop: -42, padding: spacing.md, gap: 6 },
+  guestTitle: { fontSize: 34, lineHeight: 38, fontWeight: "800", color: colors.title },
+  guestText: { fontSize: 14, color: colors.textSecondary, lineHeight: 20, marginTop: spacing.xs },
   card: { padding: spacing.md, gap: 6 },
   title: { fontSize: 18, fontWeight: "700", color: colors.title, marginBottom: 3 },
   line: { fontSize: 14, color: colors.textSecondary },

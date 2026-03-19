@@ -72,6 +72,8 @@ export function LeadDetailsScreen({ navigation, route }: Props) {
                   actions.revealContact(id);
                 }}
               />
+            ) : !state.session.isAuthed ? (
+              <AppButton title="Войти для открытия контакта" onPress={() => navigation.navigate("AuthEmail")} />
             ) : (
               <AppButton
                 title="Оформить подписку"
