@@ -4,14 +4,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    working_dir: /app
+    working_dir: /workspace
     network_mode: host
-    volumes:
-      - ./:/app
-      - ${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Android/Sdk}}:/opt/android-sdk
     environment:
       ANDROID_SDK_ROOT: /opt/android-sdk
       ANDROID_HOME: /opt/android-sdk
-      PATH: /opt/android-sdk/platform-tools:/opt/android-sdk/emulator:/opt/android-sdk/cmdline-tools/latest/bin:${PATH}
+      PATH: /usr/lib/jvm/java-17-openjdk-amd64/bin:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:/opt/android-sdk/emulator:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    # For physical device debugging on Linux host:
+    privileged: true
+    volumes:
+      - ./:/workspace
+      - android-sdk:/opt/android-sdk
+      - gradle-cache:/home/node/.gradle
+      - npm-cache:/home/node/.npm
+      - /dev/bus/usb:/dev/bus/usb
+    command: bash -lc "android-sdk-bootstrap && sleep infinity"
     tty: true
     stdin_open: true
+
+volumes:
+  android-sdk:
+  gradle-cache:
+  npm-cache:
